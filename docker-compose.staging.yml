@@ -31,6 +31,23 @@ services:
       - "${MONGO_EXPRESS_STG_PORT:-8001}:8081"
     depends_on:
       - staging_mongo_db
+  staging_metabase:
+    image: metabase/metabase:latest
+    restart: always
+    environment:
+      MB_DB_TYPE: "mongo"
+      MB_DB_DBNAME: "${MONGO_INITDB_STG_DATABASE:-staging}"
+      MB_DB_USER: "${MONGO_INITDB_ROOT_STG_USERNAME:-admin}"
+      MB_DB_PASS: "${MONGO_INITDB_ROOT_STG_PASSWORD:-secret}"
+      MB_DB_HOST: "staging_mongo_db"
+    volumes:
+      - "./database/stg/metabase:/metabase-data"
+    depends_on:
+      - staging_mongo_db
+    networks:
+      - mongodb_staging_network
+    ports:
+      - "${METABASE_STG_PORT:-8081}:3000"
 networks:
   mongodb_staging_network:
     driver: bridge
