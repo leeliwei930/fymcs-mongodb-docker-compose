@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  production_mongo_db:
+    image: mongo:latest
+    restart: always
+    environment:
+      # proxy all environment variables from .env file
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_PRD_USERNAME:-adminprod}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_PRD_PASSWORD:-secretprod}"
+      MONGO_INITDB_DATABASE: "${MONGO_INITDB_PRD_DATABASE:-production}"
+    ports:
+      - "${MONGO_DB_PRD_PORT:-27018}:27017"
+    # dedicated staging docker internal network
+    networks:
+      - mongodb_production_network
+    volumes:
+      # data directories mapping
+      - "./database/prd/data:/data/db"
+      - "./database/prd/configdb:/data/configdb"
+  production_mongo_express:
+    image: mongo-express:latest
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_INITDB_ROOT_PRD_USERNAME:-adminprod}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_INITDB_ROOT_PRD_PASSWORD:-secretprod}"
+      ME_CONFIG_MONGODB_SERVER: "production_mongo_db"
+    networks:
+      - mongodb_production_network
+    ports:
+      - "${MONGO_EXPRESS_PROD_PORT:-8002}:8081"
+    depends_on:
+      - production_mongo_db
+networks:
+  mongodb_production_network:
+    driver: bridge

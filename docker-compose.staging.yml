@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  #MongoDB Staging
+  staging_mongo_db:
+    image: mongo:latest
+    restart: always
+    environment:
+      # proxy all environment variables from .env file
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_STG_USERNAME:-admin}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_STG_PASSWORD:-secret}"
+      MONGO_INITDB_DATABASE: "${MONGO_INITDB_STG_DATABASE:-staging}"
+    ports:
+      - "${MONGO_DB_STG_PORT:-27017}:27017"
+    # dedicated staging docker internal network
+    networks:
+      - mongodb_staging_network
+    volumes:
+      # data directories mapping
+      - "./database/stg/data:/data/db"
+      - "./database/stg/configdb:/data/configdb"
+  #MongoDB express services
+  staging_mongo_express:
+    image: mongo-express:latest
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_INITDB_ROOT_STG_USERNAME:-admin}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_INITDB_ROOT_STG_PASSWORD:-secret}"
+      ME_CONFIG_MONGODB_SERVER: "staging_mongo_db"
+
+    networks:
+      - mongodb_staging_network
+    ports:
+      - "${MONGO_EXPRESS_STG_PORT:-8001}:8081"
+    depends_on:
+      - staging_mongo_db
+networks:
+  mongodb_staging_network:
+    driver: bridge
