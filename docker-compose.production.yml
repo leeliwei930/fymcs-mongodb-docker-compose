@@ -16,7 +16,6 @@ services:
     volumes:
       # data directories mapping
       - "./database/prd/data:/data/db"
-      - "./database/prd/configdb:/data/configdb"
   production_mongo_express:
     image: mongo-express:latest
     restart: always
